@@ -5,6 +5,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-void * execute(void * customer_id){}
+void * processing(void * customer_id){}
 
 int main(int argc, char *argv[]){}
