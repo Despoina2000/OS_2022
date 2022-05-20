@@ -99,17 +99,41 @@ void * processing(void * customer_id){
     }
     
     if(flag_success){
+	pthread_mutex_lock(&mutex_cashier);
+	while(cashier <= 0)
+	{
+	pthread_cond_wait(&cond_cashier ,&mutex_cashier);
+	}
+	cashier--;
         if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){
             pthread_mutex_lock(&mutex_balance);
             if(possible_zone)
             balance += choosen_seats * CzoneA;
             else balance += choosen_seats * CzoneB;
-			 pthread_mutex_unlock(&mutex_balance);
+	    pthread_mutex_unlock(&mutex_balance);
         }
     }
     else{
         pthread_mutex_lock(&mutex_seats);
         //unlock seats
+	    if(possible_zone){
+	    for(int i = 0; i<Nseat;i++)
+		{   flag_right_line =false;
+        	for(int j=0; j<NzoneA; j++){
+        	if(zoneA[i][j] == id) {zoneA[i][j];flag_right_line =true;}
+		}
+		 if (flag_right_line) break;
+	      }
+	    }
+	    else{
+	    for(int i = 0; i<Nseat;i++)
+		{   flag_right_line =false;
+        	for(int j=0; j<NzoneA; j++){
+        	if(zoneB[i][j] == id) {zoneB[i][j];flag_right_line =true;}
+		}
+		 if (flag_right_line) break;
+	      }
+	    }
         pthread_mutex_unlock(&mutex_seats);
     }
     
