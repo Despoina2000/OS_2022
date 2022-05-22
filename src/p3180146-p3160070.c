@@ -67,7 +67,9 @@ void * processing(void * customer_id){
 		    		zoneA[i] = id;
 		    		count++;
 	 		}
+			 else if (count>sum[i]) break;
         }
+		break;
 
 	}
     }
@@ -75,7 +77,7 @@ void * processing(void * customer_id){
 
 
 }else{//searching zone B
-     int sum[NzoneA];
+     int sum[NzoneB];
          
 	for(int i = 0; i<Nseat;i++)
 	{   sum[i]=0
@@ -87,13 +89,14 @@ void * processing(void * customer_id){
             count = 0;
 		for(int j = 0; j<NzoneB;j++)
 		{
-			if(zoneA[i][j] == 0 AND count<sum[i])
+			if(zoneB[i][j] == 0 AND count<sum[i])
 			{
-		    		zoneA[i] = id;
+		    		zoneB[i] = id;
 		    		count++;
 	 		}
+			 else if (count>sum[i]) break;
         }
-
+		break;
 	}
     }
     }
@@ -128,7 +131,7 @@ void * processing(void * customer_id){
 	    else{
 	    for(int i = 0; i<Nseat;i++)
 		{   flag_right_line =false;
-        	for(int j=0; j<NzoneA; j++){
+        	for(int j=0; j<NzoneB; j++){
         	if(zoneB[i][j] == id) {zoneB[i][j];flag_right_line =true;}
 		}
 		 if (flag_right_line) break;
