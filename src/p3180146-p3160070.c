@@ -7,7 +7,10 @@
 //Mutexes
 pthread_mutex_t mutex_telephonist= PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cashier = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_seats = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_seatΑ = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_seatΒ = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_countA = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_countB = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_printer = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_balance= PTHREAD_MUTEX_INITIALIZER;
 
@@ -18,6 +21,8 @@ pthread_cond_t cond_cashier = PTHREAD_COND_INITIALIZER;
 //Variable
 int *zoneA[ Nseat,NzoneA];
 int *zoneB[ Nseat, NzoneB];
+int countA[ NzoneA];
+int countB[ NzoneB];
 int telephonist;
 int cashier;
 unsigned int seed;
@@ -48,9 +53,17 @@ void * processing(void * customer_id){
 	sleep(respond_time);
 
     pthread_mutex_lock(&mutex_seats);
-    bool flag_success=false;
+    bool flag_success=0;
+    int line=-1;
     if(possible_zone){//searching zone A
-        int sum[NzoneA];
+	    int i=0;
+	   while(i<NzoneA and countA[i]<choosen_seats)
+		   if(countA[i]>=choosen_seats){
+			   
+		   }
+	    i++;
+	   }
+	    /*int sum[NzoneA];
          
 	for(int i = 0; i<Nseat;i++)
 	{   sum[i]=0
@@ -72,7 +85,7 @@ void * processing(void * customer_id){
 		break;
 
 	}
-    }
+    }*/
     
 
 
@@ -121,18 +134,18 @@ void * processing(void * customer_id){
         //unlock seats
 	    if(possible_zone){
 	    for(int i = 0; i<Nseat;i++)
-		{   flag_right_line =false;
+		{   flag_right_line =0;
         	for(int j=0; j<NzoneA; j++){
-        	if(zoneA[i][j] == id) {zoneA[i][j];flag_right_line =true;}
+        	if(zoneA[i][j] == id) {zoneA[i][j];flag_right_line =1;}
 		}
 		 if (flag_right_line) break;
 	      }
 	    }
 	    else{
 	    for(int i = 0; i<Nseat;i++)
-		{   flag_right_line =false;
+		{   flag_right_line =0;
         	for(int j=0; j<NzoneB; j++){
-        	if(zoneB[i][j] == id) {zoneB[i][j];flag_right_line =true;}
+        	if(zoneB[i][j] == id) {zoneB[i][j];flag_right_line =1;}
 		}
 		 if (flag_right_line) break;
 	      }
