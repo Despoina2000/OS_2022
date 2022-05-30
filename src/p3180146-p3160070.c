@@ -9,8 +9,8 @@ pthread_mutex_t mutex_telephonist= PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cashier = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_seatΑ = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_seatΒ = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_countA = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_countB = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_listA = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_listB = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_printer = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_balance= PTHREAD_MUTEX_INITIALIZER;
 
@@ -21,8 +21,8 @@ pthread_cond_t cond_cashier = PTHREAD_COND_INITIALIZER;
 //Variable
 int *zoneA[ Nseat,NzoneA];
 int *zoneB[ Nseat, NzoneB];
-int countA[ NzoneA];
-int countB[ NzoneB];
+struct Node* listA[ NzoneA];
+struct Node* listB[ NzoneB];
 int telephonist;
 int cashier;
 unsigned int seed;
