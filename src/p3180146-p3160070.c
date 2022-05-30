@@ -7,8 +7,8 @@
 //Mutexes
 pthread_mutex_t mutex_telephonist= PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cashier = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_seatΑ = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_seatΒ = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_seatA = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_seatB = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_listA = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_listB = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_printer = PTHREAD_MUTEX_INITIALIZER;
@@ -19,8 +19,8 @@ pthread_cond_t cond_telephonist = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond_cashier = PTHREAD_COND_INITIALIZER;
 
 //Variable
-int *zoneA[ Nseat,NzoneA];
-int *zoneB[ Nseat, NzoneB];
+int *zoneA[ NzoneA, Nseat];
+int *zoneB[ NzoneB, Nseat];
 struct Node* listA[ NzoneA];
 struct Node* listB[ NzoneB];
 int telephonist;
@@ -29,8 +29,12 @@ unsigned int seed;
 double balance;
 double sum_waiting_time;
 double sum_service_time;
+int sum_typeA;// κράτηση ολοκληρώθηκε επιτυχώς
+int sum_typeB;// κράτηση απέτυχε γιατί δεν υπάρχουν κατάλληλες θέσεις
+int sum_typeC;// κράτηση απέτυχε γιατί η συναλλαγή με την πιστωτική κάρτα δεν έγινε αποδεκτή.
 
 void * processing(void * customer_id){
+
 
     struct timespec timer_on;
 	struct timespec	service_timer;
@@ -52,109 +56,206 @@ void * processing(void * customer_id){
     bool possible_zone= rand_r(&seed) % 100 / 100.0f <= PzoneB;
 	sleep(respond_time);
 
-    pthread_mutex_lock(&mutex_seats);
-    bool flag_success=0;
+    pthread_mutex_lock(&mutex_seatA);
+    bool flag_success_finding_seats=0;
+	//bool flag_success_payment=0;
     int line=-1;
     if(possible_zone){//searching zone A
-	    int i=0;
-	   while(i<NzoneA and countA[i]<choosen_seats)
-		   if(countA[i]>=choosen_seats){
-			   
-		   }
-	    i++;
+	   int i=0;  
+		   while(i<NzoneA AND !flag_success_finding_seats){
+		   struct Node* last;
+		while (listA[i] != NULL) {
+			if(listA[i]->next->data-listA[i]->data>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+				flag_success_finding_seats=1;
+				pthread_mutex_lock(&mutex_cashier);
+				while(cashier <= 0)
+				{
+				pthread_cond_wait(&cond_cashier ,&mutex_cashier);
+				}
+				cashier--;
+					if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){//με επιτυχία πλήρωσε: Type A
+						//flag_success_payment=1;
+						sum_typeA++;
+						
+						pthread_mutex_lock(&mutex_balance);
+						balance += choosen_seats * CzoneA;
+					pthread_mutex_unlock(&mutex_balance);
+					//book θέσεις
+						j=listA[i]->data;
+						sum=0
+						while(j<listA[i]->next->data AND sum<choosen_seats ){
+							zoneA[i,j]=customer_id;
+							j++;
+							sum++;
+						}
+						//update list with sum as starting node
+					}
+				
+				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type B
+					sum_typeB++;
+				}pthread_mutex_unlock(&mutex_cashier);
+			}
+			last = listA[i]->next;
+			listA[i] = last->next;
+			if(flag_success_finding_seats) break;
+
+    	}
+		pthread_mutex_unlock(&mutex_seatA);
+		if(!flag_success_finding_seats) sum_typeC++;
+	 	}
+		 ++i;
 	   }
-	    /*int sum[NzoneA];
-         
-	for(int i = 0; i<Nseat;i++)
-	{   sum[i]=0
-        for(int j=0; j<NzoneA; j++){
-        if(zoneA[i][j] == 0) sum[i]++;
-    }
-		if(sum[i]>= choosen_seats){
-            flag_success=true;
-            count = 0;
-		for(int j = 0; j<NzoneA;j++)
-		{
-			if(zoneA[i][j] == 0 AND count<sum[i])
-			{
-		    		zoneA[i] = id;
-		    		count++;
-	 		}
-			 else if (count>sum[i]) break;
-        }
-		break;
 
-	}
-    }*/
-    
+else{//searching zone B
+	pthread_mutex_lock(&mutex_seatB);
+    int i=0;  
+		   while(i<NzoneB AND !flag_success_finding_seats){
+		   struct Node* last;
+		while (listB[i] != NULL) {
+			if(listB[i]->next->data-listB[i]->data>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+				flag_success_finding_seats=1;
+				pthread_mutex_lock(&mutex_cashier);
+				while(cashier <= 0)
+				{
+				pthread_cond_wait(&cond_cashier ,&mutex_cashier);
+				}
+				cashier--;
+					if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){//με επιτυχία πλήρωσε: Type A
+						//flag_success_payment=1;
+						
+						sum_typeA++;
+						pthread_mutex_lock(&mutex_balance);
+						balance += choosen_seats * CzoneA;
+						pthread_mutex_unlock(&mutex_balance);
+						//book θέσεις
+						j=listB[i]->data;
+						sum=0
+						while(j<listB[i]->next->data AND sum<choosen_seats ){
+							zoneB[i,j]=customer_id;
+							j++;
+							sum++;
+						}
+					}
+				
+				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type B
+					sum_typeB++;
+				}
+				pthread_mutex_unlock(&mutex_cashier);
+			}
+			last = listA[i]->next;
+			listA[i] = last->next;
+			if(flag_success_finding_seats) break;
 
-
-}else{//searching zone B
-     int sum[NzoneB];
-         
-	for(int i = 0; i<Nseat;i++)
-	{   sum[i]=0
-        for(int j=0; j<NzoneB; j++){
-        if(zoneA[i][j] == 0) sum[i]++;
-    }
-		if(sum[i]>= choosen_seats){
-            flag_success=true;
-            count = 0;
-		for(int j = 0; j<NzoneB;j++)
-		{
-			if(zoneB[i][j] == 0 AND count<sum[i])
-			{
-		    		zoneB[i] = id;
-		    		count++;
-	 		}
-			 else if (count>sum[i]) break;
-        }
-		break;
-	}
-    }
-    }
+    	}
+		if(!flag_success_finding_seats) sum_typeC++;
+	 	}
+		 ++i;
+	   }
+	   pthread_mutex_lock(&mutex_seatB);
+  
+} 
     
-    if(flag_success){
-	pthread_mutex_lock(&mutex_cashier);
-	while(cashier <= 0)
-	{
-	pthread_cond_wait(&cond_cashier ,&mutex_cashier);
-	}
-	cashier--;
-        if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){
-            pthread_mutex_lock(&mutex_balance);
-            if(possible_zone)
-            balance += choosen_seats * CzoneA;
-            else balance += choosen_seats * CzoneB;
-	    pthread_mutex_unlock(&mutex_balance);
-        }
-    }
-    else{
-        pthread_mutex_lock(&mutex_seats);
-        //unlock seats
-	    if(possible_zone){
-	    for(int i = 0; i<Nseat;i++)
-		{   flag_right_line =0;
-        	for(int j=0; j<NzoneA; j++){
-        	if(zoneA[i][j] == id) {zoneA[i][j];flag_right_line =1;}
-		}
-		 if (flag_right_line) break;
-	      }
-	    }
-	    else{
-	    for(int i = 0; i<Nseat;i++)
-		{   flag_right_line =0;
-        	for(int j=0; j<NzoneB; j++){
-        	if(zoneB[i][j] == id) {zoneB[i][j];flag_right_line =1;}
-		}
-		 if (flag_right_line) break;
-	      }
-	    }
-        pthread_mutex_unlock(&mutex_seats);
-    }
     
-    }
+    
+    
 
 int main(int argc, char *argv[]){
-    
+ if (argc != 3) {
+		printf("ERROR: Το προγραμμα πρεπει να παιρνει 2 arguments(number of clients--> int, seed --> int)\n\n\n");
+		exit(-1);
+	}
+	
+	int customers = atoi(argv[1]);
+   	if ( customers <= 0) {
+		printf("ERROR: Ο αριθμός των πελατών πρεπει να ειναι ακεραιος θετικός\n");
+		exit(-1);
+	}
+
+    sum_waiting_time = 0;
+    sum_service_time = 0;
+	telephonist = Ntel;
+	seed = atoi(argv[2]);
+	printf("\n \nStart simulation with %d customers \n \n \n", customers);
+	
+
+	//Initializing seats
+	for(int i=0; i<NzoneA; ++i){
+		push(*listA[i],0);
+		push(*listA[i],10);
+		for(int j=0;j<Nseat;++j)
+		{
+			zoneA[i,j] = -1;
+		}
+	}
+
+	for(int i=0; i<NzoneB; ++i){
+		push(*listB[i],0);
+		push(*listB[i],10);
+		for(int j=0;j<Nseat;++j)
+		{
+			zoneB[i,j] = -1;
+		}
+	}
+	
+
+	
+	
+
+	/*Create threads*/
+	pthread_t id[customers];
+	for(int i=0; i<customers; ++i)
+	{
+		pthread_create(&id[i], NULL, &execute, &i);
+	}
+
+
+
+	/*Wait all threads to finish*/
+	for(int i=0; i<customers; ++i)
+	{
+		pthread_join(id[i], NULL);
+	}
+
+	/*Print results*/
+	
+	//if a seat is not booked the result will be -1
+
+
+	printf("Πλάνο θέσεων: \n \n");
+	for(int i=0; i<NzoneA; ++i){
+		for (int j = 0; j < Nseat; j++) 
+		{	if(zoneA[i,j] != -1)
+			printf("Ζώνη Α / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneA[i,j]);
+			else
+			printf("Ζώνη Α / Σειρά %d / Θέση %d / κανένας \n", i, j);
+		}
+	}
+
+	for(int i=0; i<NzoneB; ++i){
+		for (int j = 0; j < Nseat; j++) 
+		{	if(zoneA[i,j] != -1)
+			printf("Ζώνη B / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneB[i,j]);
+			else
+			printf("Ζώνη B / Σειρά %d / Θέση %d / κανένας \n", i, j);
+		}
+	}
+
+	printf("\n");
+	printf("Τα συνολικά έσοδα είναι: %f € \n", balance);
+
+	printf("Το ποσοστό των συναλλαγών όπου η κράτηση ολοκληρώθηκε επιτυχώς: %f \n", sum_typeA/customers);
+
+	printf("Το ποσοστό των συναλλαγών όπου η κράτηση απέτυχε γιατί δεν υπάρχουν κατάλληλες θέσεις: %f \n", sum_typeB/customers);
+
+	printf("Το ποσοστό των συναλλαγών όπου η κράτηση απέτυχε γιατί η συναλλαγή με την πιστωτική κάρτα δεν έγινε αποδεκτή: %f \n", sum_typeC/customers);
+	
+	printf("Ο μέσος χρόνος αναμονής είναι: %f \n", sum_waiting_time/customers);
+	
+	printf("Ο μέσος χρόνος εξυπηρέτησης είναι: %f \n", sum_service_time /customers);
+
+
+
+
+	
+	return 0;   
 }
