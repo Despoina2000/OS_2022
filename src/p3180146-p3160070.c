@@ -56,16 +56,17 @@ void * processing(void * customer_id){
     bool possible_zone= rand_r(&seed) % 100 / 100.0f <= PzoneB;
 	sleep(respond_time);
 
-    pthread_mutex_lock(&mutex_seatA);
+    ;
     bool flag_success_finding_seats=0;
 	//bool flag_success_payment=0;
     int line=-1;
     if(possible_zone){//searching zone A
-	   int i=0;  
+	   int i=0; 
+	   pthread_mutex_lock(&mutex_seatA) 
 		   while(i<NzoneA AND !flag_success_finding_seats){
 		   struct Node* last;
 		while (listA[i] != NULL) {
-			if(listA[i]->next->data-listA[i]->data>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+			if((listA[i]->next->data-listA[i]->data)+1>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
 				flag_success_finding_seats=1;
 				pthread_mutex_lock(&mutex_cashier);
 				while(cashier <= 0)
@@ -82,7 +83,7 @@ void * processing(void * customer_id){
 					pthread_mutex_unlock(&mutex_balance);
 					//book θέσεις
 						j=listA[i]->data;
-						sum=0
+						sum=0;
 						while(j<listA[i]->next->data AND sum<choosen_seats ){
 							zoneA[i,j]=customer_id;
 							j++;
@@ -92,7 +93,7 @@ void * processing(void * customer_id){
 					}
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type B
-					sum_typeB++;
+					sum_typeC++;
 				}pthread_mutex_unlock(&mutex_cashier);
 			}
 			last = listA[i]->next;
@@ -101,7 +102,7 @@ void * processing(void * customer_id){
 
     	}
 		pthread_mutex_unlock(&mutex_seatA);
-		if(!flag_success_finding_seats) sum_typeC++;
+		if(!flag_success_finding_seats) sum_typeB++;
 	 	}
 		 ++i;
 	   }
@@ -125,11 +126,11 @@ else{//searching zone B
 						
 						sum_typeA++;
 						pthread_mutex_lock(&mutex_balance);
-						balance += choosen_seats * CzoneA;
+						balance += choosen_seats * CzoneB;
 						pthread_mutex_unlock(&mutex_balance);
 						//book θέσεις
 						j=listB[i]->data;
-						sum=0
+						sum=0;
 						while(j<listB[i]->next->data AND sum<choosen_seats ){
 							zoneB[i,j]=customer_id;
 							j++;
@@ -138,16 +139,16 @@ else{//searching zone B
 					}
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type B
-					sum_typeB++;
+					sum_typeC++;
 				}
 				pthread_mutex_unlock(&mutex_cashier);
 			}
-			last = listA[i]->next;
-			listA[i] = last->next;
+			last = listB[i]->next;
+			listB[i] = last->next;
 			if(flag_success_finding_seats) break;
 
     	}
-		if(!flag_success_finding_seats) sum_typeC++;
+		if(!flag_success_finding_seats) sum_typeB++;
 	 	}
 		 ++i;
 	   }
@@ -233,7 +234,7 @@ int main(int argc, char *argv[]){
 
 	for(int i=0; i<NzoneB; ++i){
 		for (int j = 0; j < Nseat; j++) 
-		{	if(zoneA[i,j] != -1)
+		{	if(zoneB[i,j] != -1)
 			printf("Ζώνη B / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneB[i,j]);
 			else
 			printf("Ζώνη B / Σειρά %d / Θέση %d / κανένας \n", i, j);
