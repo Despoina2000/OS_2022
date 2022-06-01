@@ -10,18 +10,18 @@
 #define Nseat 10
 #define NzoneA 10
 #define NzoneB 20
-#define PzoneB 0.3
+#define PzoneB 0.7
 #define CzoneA 30
 #define CzoneB 20
-#define Nseatlow 1
+#define Nseatlow 1 // Number of tickets
 #define Nseathigh 5
-#define treslow 1
+#define treslow 1 // Next customer call
 #define treshigh 5
-#define tseatlow 5
+#define tseatlow 5 // Seconds operator takes to book
 #define tseathigh 13
-#define tcashlow 4
+#define tcashlow 4 // Seconds operator takes to bill card
 #define tcashhigh 8
-#define Pcardsucces 0.9
+#define Pcardsucces 0.9 // Card approval success rate
 
 /* Node of a doubly linked list */
 struct Node {
@@ -53,7 +53,7 @@ void push(struct Node** head_ref, int new_data)
 }
 
 /* Given a node as prev_node, insert a new node after the given node */
-void insertAfter(struct Node* prev_node, int new_data)
+void insertAfter(struct Node* prev_node,  int new_data)
 {
     /*1. check if the given prev_node is NULL */
     if (prev_node == NULL) {
@@ -80,6 +80,57 @@ void insertAfter(struct Node* prev_node, int new_data)
     if (new_node->next != NULL)
         new_node->next->prev = new_node;
 }
+
+void deleteNode(struct Node** head_ref, int key){
+    // Store head node
+    struct Node *temp = *head_ref;
+ 
+    // If head node itself holds the key to be deleted
+    if (temp != NULL && temp->data == key) {
+        *head_ref = temp->next; // Changed head
+        free(temp); // free old head
+        return;
+    }
+ 
+    // Search for the key to be deleted, keep track of the
+    // previous node as we need to change 'prev->next'
+    while (temp != NULL && temp->data != key) {
+        prev = temp;
+        temp = temp->next;
+    }
+ 
+    // If key was not present in linked list
+    if (temp == NULL)
+        return;
+ 
+    // Unlink the node from linked list
+    prev->next = temp->next;
+ 
+    free(temp); // Free memory
+}
+
+void sortList(struct Node** head_ref) {  
+    struct Node *current = NULL, *index = NULL;  
+    int temp;  
+    //Check whether list is empty  
+    if(head_ref == NULL) {  
+        return;  
+    }  
+    else {  
+        //Current will point to head  
+        for(current = &head_ref; current->next != NULL; current = current->next) {  
+            //Index will point to node next to current  
+            for(index = current->next; index != NULL; index = index->next) {  
+                //If current's data is greater than index's data, swap the data of current and index  
+                if(current->data > index->data) {  
+                    temp = current->data;  
+                    current->data = index->data;  
+                    index->data = temp;  
+                }  
+            }  
+        }  
+    }  
+}  
 
 /* Given a reference (pointer to pointer) to the head
    of a DLL and an int, appends a new node at the end  */
