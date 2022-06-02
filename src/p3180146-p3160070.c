@@ -91,9 +91,11 @@ void * processing(void * customer_id){
 						}
 						//update list with j 
 						if((list->next->data-list->data)+1=choosen_seats) deleteNode(&listA[i], j-1);
-						deleteNode(&listA[i], list->data);
+						else{
 						push(&listA[i], j);
-						sortList(&listA[i]);
+						sortList(&listA[i]);}
+						deleteNode(&listA[i], list->data);
+						
 					}
 					
 				
@@ -143,9 +145,10 @@ else{//searching zone B
 						}
 						//update list with j 
 						if((list->next->data-list->data)+1=choosen_seats) deleteNode(&listB[i], j-1);
-						deleteNode(&listB[i], list->data);
+						else{
 						push(&listB[i], j);
-						sortList(&listB[i]);
+						sortList(&listB[i]);}
+						deleteNode(&listB[i], list->data);
 					}
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
@@ -193,7 +196,7 @@ int main(int argc, char *argv[]){
 	//Initializing seats
 	for(int i=0; i<NzoneA; ++i){
 		push(*listA[i],0);
-		push(*listA[i],9);
+		append(*listA[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
 			zoneA[i,j] = -1;
@@ -202,7 +205,7 @@ int main(int argc, char *argv[]){
 
 	for(int i=0; i<NzoneB; ++i){
 		push(*listB[i],0);
-		push(*listB[i],9);
+		append(*listB[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
 			zoneB[i,j] = -1;
