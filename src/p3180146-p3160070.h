@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #define Ntel 3
 #define Ncash 2
@@ -81,35 +78,50 @@ void insertAfter(struct Node* prev_node,  int new_data)
         new_node->next->prev = new_node;
 }
 
-void deleteNode(struct Node** head_ref, int key){
-    // Store head node
-    struct Node *temp = *head_ref;
- 
-    // If head node itself holds the key to be deleted
-    if (temp != NULL && temp->data == key) {
-        *head_ref = temp->next; // Changed head
-        free(temp); // free old head
+void deleteNode(struct Node** head_ref, struct Node* del)
+{
+    /* base case */
+    if (*head_ref == NULL || del == NULL)
         return;
-    }
- 
-    // Search for the key to be deleted, keep track of the
-    // previous node as we need to change 'prev->next'
-    while (temp != NULL && temp->data != key) {
-        prev = temp;
-        temp = temp->next;
-    }
- 
-    // If key was not present in linked list
-    if (temp == NULL)
-        return;
- 
-    // Unlink the node from linked list
-    prev->next = temp->next;
- 
-    free(temp); // Free memory
+
+    /* If node to be deleted is head node */
+    if (*head_ref == del)
+        *head_ref = del->next;
+
+    /* Change next only if node to be deleted is NOT the last node */
+    if (del->next != NULL)
+        del->next->prev = del->prev;
+
+    /* Change prev only if node to be deleted is NOT the first node */
+    if (del->prev != NULL)
+        del->prev->next = del->next;
+
+    /* Finally, free the memory occupied by del*/
+    free(del);
+    return;
 }
 
-void sortList(struct Node** head_ref) {  
+void deleteNodebyKey(struct Node** head_ref, int key) {
+    if (*head_ref == NULL || key <= 0)
+        return;
+
+    struct Node* current = *head_ref;
+
+    /* traverse up to the node at position 'n' from
+       the beginning */
+    while ( current != NULL && current->data!=key)
+        current = current->next;
+
+    /* if 'n' is greater than the number of nodes
+       in the doubly linked list */
+    if (current == NULL)
+        return;
+
+    /* delete the node pointed to by 'current' */
+    deleteNode(head_ref, current);
+}
+
+void sortList(struct Node* head_ref) {  
     struct Node *current = NULL, *index = NULL;  
     int temp;  
     //Check whether list is empty  
@@ -118,7 +130,7 @@ void sortList(struct Node** head_ref) {
     }  
     else {  
         //Current will point to head  
-        for(current = &head_ref; current->next != NULL; current = current->next) {  
+        for(current = head_ref; current->next != NULL; current = current->next) {  
             //Index will point to node next to current  
             for(index = current->next; index != NULL; index = index->next) {  
                 //If current's data is greater than index's data, swap the data of current and index  
@@ -173,18 +185,11 @@ void append(struct Node** head_ref, int new_data)
 // from the given node
 void printList(struct Node* node)
 {
-    struct Node* last;
+    
     printf("\nTraversal in forward direction \n");
     while (node != NULL) {
         printf(" %d ", node->data);
-        last = node;
         node = node->next;
-    }
- 
-    printf("\nTraversal in reverse direction \n");
-    while (last != NULL) {
-        printf(" %d ", last->data);
-        last = last->prev;
     }
 }
 
