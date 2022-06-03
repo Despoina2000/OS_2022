@@ -21,8 +21,8 @@ pthread_cond_t cond_telephonist = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond_cashier = PTHREAD_COND_INITIALIZER;
 
 //Variable
-int *zoneA[ NzoneA, Nseat];
-int *zoneB[ NzoneB, Nseat];
+int zoneA[ NzoneA][ Nseat];
+int zoneB[ NzoneB][ Nseat];
 struct Node* listA[ NzoneA];
 struct Node* listB[ NzoneB];
 int telephonist;
@@ -36,7 +36,7 @@ int sum_typeB;// κράτηση απέτυχε γιατί δεν υπάρχου�
 int sum_typeC;// κράτηση απέτυχε γιατί η συναλλαγή με την πιστωτική κάρτα δεν έγινε αποδεκτή.
 
 void * processing(void * customer_id){
-
+int rc;
 
     struct timespec timer_on;
 	struct timespec	service_timer;
@@ -44,73 +44,84 @@ void * processing(void * customer_id){
     int id=*(int *)customer_id;
 
     clock_gettime(CLOCK_REALTIME, &timer_on); //Start timer
-    pthread_mutex_lock(&mutex_telephonist);
+    rc= pthread_mutex_lock(&mutex_telephonist);
+	assert_successful_mutex_action(rc);
     while(telephonist <= 0)
 	{
 	pthread_cond_wait(&cond_telephonist ,&mutex_telephonist);
 	}
 	--telephonist;
 	clock_gettime(CLOCK_REALTIME, &service_timer);
-    pthread_mutex_unlock(&mutex_telephonist);
+    rc=pthread_mutex_unlock(&mutex_telephonist);
 
     int choosen_seats = rand_r(&seed) % Nseathigh + Nseatlow;
 	int respond_time = rand_r(&seed) % tseathigh + tseatlow;
-    bool possible_zone= rand_r(&seed) % 100 / 100.0f <= PzoneB;
+    int possible_zone= rand_r(&seed) % 100 / 100.0f;
 	sleep(respond_time);
 
     
-    bool flag_success_finding_seats=0;
+    int flag_success_finding_seats=0;
 	//bool flag_success_payment=0;
     int line=-1;
-    if(possible_zone){//searching zone A
+    if(possible_zone <= PzoneB){//searching zone A
 	   int i=0; 
-	   pthread_mutex_lock(&mutex_seatA); 
+	   rc= pthread_mutex_lock(&mutex_seatA);
+	   assert_successful_mutex_action(rc); 
 		   while(i<NzoneA && !flag_success_finding_seats){
-		   struct Node list= listA[i];
-		while (list != NULL) {
-			if((list->next->data-list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+		   struct Node* _list= listA[i];
+		while ( _list != NULL) {
+			if((_list->next->data-_list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
 				flag_success_finding_seats=1;
-				pthread_mutex_lock(&mutex_cashier);
+				rc= pthread_mutex_lock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 				while(cashier <= 0)
 				{
 				pthread_cond_wait(&cond_cashier ,&mutex_cashier);
 				}
 				cashier--;
-				pthread_mutex_unlock(&mutex_cashier);
+				rc= pthread_mutex_unlock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 					if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){//με επιτυχία πλήρωσε: Type A
 						//flag_success_payment=1;
 						sum_typeA++;
 						
-						pthread_mutex_lock(&mutex_balance);
+						rc= pthread_mutex_lock(&mutex_balance);
+						assert_successful_mutex_action(rc);
 						balance += choosen_seats * CzoneA;
-						pthread_mutex_unlock(&mutex_balance);
+						rc= pthread_mutex_unlock(&mutex_balance);
+						assert_successful_mutex_action(rc);
 					//book θέσεις
-						int j=list->data;
+						int j=_list->data;
 						int sum=0;
-						while(j<=list->next->data && sum<choosen_seats ){
-							zoneA[i,j]=id;
+						while(j<=_list->next->data && sum<choosen_seats ){
+							zoneA[i][j]=id;
 							j++;
 							sum++;
 						}
 						//update list with j 
-						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listA[i], j-1);
+						if((_list->next->data-_list->data)+1==choosen_seats) deleteNodebyKey(&listA[i], j-1);
 						else{
 						push(&listA[i], j);}
-						deleteNodebyKey(&listA[i], list->data);
+						deleteNodebyKey(&listA[i], _list->data);
 						
 					}
 					
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
 					sum_typeC++;
-				} cashier++;
+				}
+				rc= pthread_mutex_lock(&mutex_cashier);
+				assert_successful_mutex_action(rc); 
+				cashier++;
 				pthread_cond_signal(&cond_cashier);
+				rc= pthread_mutex_unlock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 			}
-			list = list->next->next;
+			_list = _list->next->next;
 			if(flag_success_finding_seats) break;
 
     	}
-		pthread_mutex_unlock(&mutex_seatA);
+		rc= pthread_mutex_unlock(&mutex_seatA);
 		if(!flag_success_finding_seats) sum_typeB++;
 		++i;
 	 	}
@@ -118,49 +129,58 @@ void * processing(void * customer_id){
 	   }
 
 else{//searching zone B
-	pthread_mutex_lock(&mutex_seatB);
+	rc= pthread_mutex_lock(&mutex_seatB);
+	assert_successful_mutex_action(rc);
     int i=0;  
 		   while(i<NzoneB && !flag_success_finding_seats){
-		   struct Node list=listB[i];
-		while (list != NULL) {
-			if((list->next->data-list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+		   struct Node* _list=listB[i];
+		while (_list != NULL) {
+			if((_list->next->data-_list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
 				flag_success_finding_seats=1;
-				pthread_mutex_lock(&mutex_cashier);
+				rc= pthread_mutex_lock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 				while(cashier <= 0)
 				{
 				pthread_cond_wait(&cond_cashier ,&mutex_cashier);
 				}
 				cashier--;
+				rc= pthread_mutex_unlock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 					if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){//με επιτυχία πλήρωσε: Type A
 						//flag_success_payment=1;
 						
 						sum_typeA++;
-						pthread_mutex_lock(&mutex_balance);
+						rc= pthread_mutex_lock(&mutex_balance);
+						assert_successful_mutex_action(rc);
 						balance += choosen_seats * CzoneB;
-						pthread_mutex_unlock(&mutex_balance);
+						rc= pthread_mutex_unlock(&mutex_balance);
+						assert_successful_mutex_action(rc);
 						//book θέσεις
-						int j=list->data;
+						int j=_list->data;
 						int sum=0;
-						while(j<=list->next->data && sum<choosen_seats ){
-							zoneB[i,j]=id;
+						while(j<=_list->next->data && sum<choosen_seats ){
+							zoneB[i][j]=id;
 							j++;
 							sum++;
 						}
 						//update list with j 
-						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listB[i], j-1);
+						if((_list->next->data-_list->data)+1==choosen_seats) deleteNodebyKey(&listB[i], j-1);
 						else{
 						push(&listB[i], j);}
-						deleteNodebyKey(&listB[i], list->data);
+						deleteNodebyKey(&listB[i], _list->data);
 					}
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
 					sum_typeC++;
 				}
-
+				rc= pthread_mutex_lock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 				cashier++;
 				pthread_cond_signal(&cond_cashier);
+				rc= pthread_mutex_unlock(&mutex_cashier);
+				assert_successful_mutex_action(rc);
 			}
-			list = list->next->next;
+			_list = _list->next->next;
 			if(flag_success_finding_seats) break;
 
     	}
@@ -169,12 +189,17 @@ else{//searching zone B
 	 	}
 		 
 	   }
-	   pthread_mutex_lock(&mutex_seatB);
-
+	   rc= pthread_mutex_unlock(&mutex_seatB);
+	   assert_successful_mutex_action(rc);
+		rc= pthread_mutex_lock(&mutex_telephonist);
+	assert_successful_mutex_action(rc);
 	   telephonist++;
+	   rc= pthread_mutex_unlock(&mutex_telephonist);
+	assert_successful_mutex_action(rc);
 	   pthread_cond_signal(&cond_telephonist);
+	   pthread_exit(NULL);
   
-} 
+}  
     
     
     
@@ -206,7 +231,7 @@ int main(int argc, char *argv[]){
 		append(&listA[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
-			zoneA[i,j] = -1;
+			zoneA[i][j] = -1;
 		}
 	}
 
@@ -215,28 +240,48 @@ int main(int argc, char *argv[]){
 		append(&listB[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
-			zoneB[i,j] = -1;
+			zoneB[i][j] = -1;
 		}
 	}
 	
-
-	
-	
-
 	/*Create threads*/
+	int rc;
+	pthread_mutex_init(&mutex_telephonist, NULL);
+	pthread_mutex_init(&mutex_cashier, NULL);
+	pthread_mutex_init(&mutex_seatA, NULL);
+	pthread_mutex_init(&mutex_seatB, NULL);
+	pthread_mutex_init(&mutex_listA, NULL);
+	pthread_mutex_init(&mutex_listB, NULL);
+	pthread_mutex_init(&mutex_printer, NULL);
+	pthread_mutex_init(&mutex_balance, NULL);
+	pthread_cond_init(&cond_telephonist, NULL);
+	pthread_cond_init(&cond_cashier, NULL);
+   
 	pthread_t id[customers];
 	for(int i=0; i<customers; ++i)
 	{
-		pthread_create(&id[i], NULL, &execute, &i);
+		printf("In main: creating thread %ld\n", i);
+		rc=pthread_create(&id[i], NULL, processing, &i);
+		if (rc){
+				printf("ERROR code from pthread_create() is %d\n", rc);
+      	exit(-1);
+    	}
 	}
-
-
 
 	/*Wait all threads to finish*/
 	for(int i=0; i<customers; ++i)
 	{
 		pthread_join(id[i], NULL);
 	}
+	pthread_mutex_destroy(&mutex_telephonist);
+	pthread_mutex_destroy(&mutex_cashier);
+	pthread_mutex_destroy(&mutex_seatB);
+	pthread_mutex_destroy(&mutex_listA);
+	pthread_mutex_destroy(&mutex_listB);
+	pthread_mutex_destroy(&mutex_printer);
+	pthread_mutex_destroy(&mutex_balance);
+	pthread_cond_destroy(&cond_telephonist);
+	pthread_cond_destroy(&cond_cashier);
 
 	/*Print results*/
 	
@@ -246,8 +291,8 @@ int main(int argc, char *argv[]){
 	printf("Πλάνο θέσεων: \n \n");
 	for(int i=0; i<NzoneA; ++i){
 		for (int j = 0; j < Nseat; j++) 
-		{	if(zoneA[i,j] != -1)
-			printf("Ζώνη Α / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneA[i,j]);
+		{	if(zoneA[i][j] != -1)
+			printf("Ζώνη Α / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneA[i][j]);
 			else
 			printf("Ζώνη Α / Σειρά %d / Θέση %d / κανένας \n", i, j);
 		}
@@ -255,8 +300,8 @@ int main(int argc, char *argv[]){
 
 	for(int i=0; i<NzoneB; ++i){
 		for (int j = 0; j < Nseat; j++) 
-		{	if(zoneB[i,j] != -1)
-			printf("Ζώνη B / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneB[i,j]);
+		{	if(zoneB[i][j] != -1)
+			printf("Ζώνη B / Σειρά %d / Θέση %d / Πελάτης %d\n", i, j, zoneB[i][j]);
 			else
 			printf("Ζώνη B / Σειρά %d / Θέση %d / κανένας \n", i, j);
 		}
@@ -280,4 +325,13 @@ int main(int argc, char *argv[]){
 
 	
 	return 0;   
+}
+
+void assert_successful_mutex_action(int response_code)
+{
+    if (response_code != 0) 
+    {    
+        printf("Σφάλμα στο κλείδωμα/ξεκλείδωμα του mutex με κωδικο σφαλματος %d\n", response_code);
+        pthread_exit(&response_code);
+    }
 }
