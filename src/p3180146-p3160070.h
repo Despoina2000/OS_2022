@@ -47,6 +47,8 @@ void push(struct Node** head_ref, int new_data)
  
     /* 5. move the head to point to the new node */
     (*head_ref) = new_node;
+
+    sortList(head_ref);
 }
 
 /* Given a node as prev_node, insert a new node after the given node */

@@ -56,17 +56,17 @@ void * processing(void * customer_id){
     bool possible_zone= rand_r(&seed) % 100 / 100.0f <= PzoneB;
 	sleep(respond_time);
 
-    ;
+    
     bool flag_success_finding_seats=0;
 	//bool flag_success_payment=0;
     int line=-1;
     if(possible_zone){//searching zone A
 	   int i=0; 
-	   pthread_mutex_lock(&mutex_seatA) 
+	   pthread_mutex_lock(&mutex_seatA); 
 		   while(i<NzoneA && !flag_success_finding_seats){
 		   struct Node list= listA[i];
 		while (list != NULL) {
-			if((list->next->data-list->data)+1=>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+			if((list->next->data-list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
 				flag_success_finding_seats=1;
 				pthread_mutex_lock(&mutex_cashier);
 				while(cashier <= 0)
@@ -82,19 +82,19 @@ void * processing(void * customer_id){
 						balance += choosen_seats * CzoneA;
 						pthread_mutex_unlock(&mutex_balance);
 					//book θέσεις
-						j=list->data;
-						sum=0;
+						int j=list->data;
+						int sum=0;
 						while(j<=list->next->data && sum<choosen_seats ){
 							zoneA[i,j]=customer_id;
 							j++;
 							sum++;
 						}
 						//update list with j 
-						if((list->next->data-list->data)+1=choosen_seats) deleteNode(&listA[i], j-1);
+						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listA[i], j-1);
 						else{
 						push(&listA[i], j);
-						sortList(&listA[i]);}
-						deleteNode(&listA[i], list->data);
+						sortList(listA[i]);}
+						deleteNodebyKey(&listA[i], list->data);
 						
 					}
 					
@@ -120,7 +120,7 @@ else{//searching zone B
 		   while(i<NzoneB && !flag_success_finding_seats){
 		   struct Node list=listB[i];
 		while (list != NULL) {
-			if((list->next->data-list->data)+1=>choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
+			if((list->next->data-list->data)+1>=choosen_seats){//βρήκαμε πιθανές θέσεις για τον πελάτη
 				flag_success_finding_seats=1;
 				pthread_mutex_lock(&mutex_cashier);
 				while(cashier <= 0)
@@ -136,19 +136,19 @@ else{//searching zone B
 						balance += choosen_seats * CzoneB;
 						pthread_mutex_unlock(&mutex_balance);
 						//book θέσεις
-						j=list->data;
-						sum=0;
+						int j=list->data;
+						int sum=0;
 						while(j<=list->next->data && sum<choosen_seats ){
 							zoneB[i,j]=customer_id;
 							j++;
 							sum++;
 						}
 						//update list with j 
-						if((list->next->data-list->data)+1=choosen_seats) deleteNode(&listB[i], j-1);
+						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listB[i], j-1);
 						else{
 						push(&listB[i], j);
-						sortList(&listB[i]);}
-						deleteNode(&listB[i], list->data);
+						sortList(listB[i]);}
+						deleteNodebyKey(&listB[i], list->data);
 					}
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
@@ -195,8 +195,8 @@ int main(int argc, char *argv[]){
 
 	//Initializing seats
 	for(int i=0; i<NzoneA; ++i){
-		push(*listA[i],0);
-		append(*listA[i],9);
+		push(&listA[i],0);
+		append(&listA[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
 			zoneA[i,j] = -1;
@@ -204,8 +204,8 @@ int main(int argc, char *argv[]){
 	}
 
 	for(int i=0; i<NzoneB; ++i){
-		push(*listB[i],0);
-		append(*listB[i],9);
+		push(&listB[i],0);
+		append(&listB[i],9);
 		for(int j=0;j<Nseat;++j)
 		{
 			zoneB[i,j] = -1;
