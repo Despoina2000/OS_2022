@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "p3180146-p3160070.h"
+
 //Mutexes
 pthread_mutex_t mutex_telephonist= PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_cashier = PTHREAD_MUTEX_INITIALIZER;
@@ -92,8 +94,7 @@ void * processing(void * customer_id){
 						//update list with j 
 						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listA[i], j-1);
 						else{
-						push(&listA[i], j);
-						sortList(listA[i]);}
+						push(&listA[i], j);}
 						deleteNodebyKey(&listA[i], list->data);
 						
 					}
@@ -146,8 +147,7 @@ else{//searching zone B
 						//update list with j 
 						if((list->next->data-list->data)+1==choosen_seats) deleteNodebyKey(&listB[i], j-1);
 						else{
-						push(&listB[i], j);
-						sortList(listB[i]);}
+						push(&listB[i], j);}
 						deleteNodebyKey(&listB[i], list->data);
 					}
 				
