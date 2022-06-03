@@ -76,6 +76,7 @@ void * processing(void * customer_id){
 				pthread_cond_wait(&cond_cashier ,&mutex_cashier);
 				}
 				cashier--;
+				pthread_mutex_unlock(&mutex_cashier);
 					if(rand_r(&seed) % 100 / 100.0f <= Pcardsucces){//με επιτυχία πλήρωσε: Type A
 						//flag_success_payment=1;
 						sum_typeA++;
@@ -87,7 +88,7 @@ void * processing(void * customer_id){
 						int j=list->data;
 						int sum=0;
 						while(j<=list->next->data && sum<choosen_seats ){
-							zoneA[i,j]=customer_id;
+							zoneA[i,j]=id;
 							j++;
 							sum++;
 						}
@@ -102,7 +103,8 @@ void * processing(void * customer_id){
 				
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
 					sum_typeC++;
-				}pthread_mutex_unlock(&mutex_cashier);
+				} cashier++;
+				pthread_cond_signal(&cond_cashier);
 			}
 			list = list->next->next;
 			if(flag_success_finding_seats) break;
@@ -140,7 +142,7 @@ else{//searching zone B
 						int j=list->data;
 						int sum=0;
 						while(j<=list->next->data && sum<choosen_seats ){
-							zoneB[i,j]=customer_id;
+							zoneB[i,j]=id;
 							j++;
 							sum++;
 						}
@@ -154,7 +156,9 @@ else{//searching zone B
 				else{//βρήκε θέσεις αλλά δεν μπόρεσε να πληρώσει: Type C
 					sum_typeC++;
 				}
-				pthread_mutex_unlock(&mutex_cashier);
+
+				cashier++;
+				pthread_cond_signal(&cond_cashier);
 			}
 			list = list->next->next;
 			if(flag_success_finding_seats) break;
@@ -166,6 +170,9 @@ else{//searching zone B
 		 
 	   }
 	   pthread_mutex_lock(&mutex_seatB);
+
+	   telephonist++;
+	   pthread_cond_signal(&cond_telephonist);
   
 } 
     
