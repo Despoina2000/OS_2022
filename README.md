@@ -51,3 +51,9 @@ Creating a Double Link List Node to store the start and end pairs of consecutive
 
 ## p3180146-p3160070-Copy.c
 <p>Here we are testing our Node list.</p>
+
+## Team Members
+- [Despoina Papadopoulou](https://github.com/Despoina2000)
+- [George Koutoupis](https://github.com/GKoutoupis)
+- [Nicholas Stragalis](https://github.com/stragalisn)
+
