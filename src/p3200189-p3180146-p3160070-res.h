@@ -100,6 +100,7 @@ void deleteNode(struct Node** head_ref, struct Node* del)
 
     /* Finally, free the memory occupied by del*/
     free(del);
+    sortList();
     return;
 }
 
