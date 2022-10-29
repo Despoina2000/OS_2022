@@ -180,6 +180,7 @@ void append(struct Node** head_ref, int new_data)
  
     /* 7. Make last node as previous of new node */
     new_node->prev = last;
+    sortList();
  
     return;
 }
